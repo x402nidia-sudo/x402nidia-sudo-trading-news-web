@@ -44,8 +44,9 @@ function setBusy(key=''){
  busyState=key;$('progress').hidden=!key;
  $('buy').disabled=!!key||!!pending||!config?.payments_enabled||newsState!=='available';
  $('wallet').disabled=!!key||!config?.payments_enabled;
- $('asset').disabled=!!key||!!pending||!config;
- $('importance').disabled=!!key||!!pending||!config||!$('asset').value;
+ // A pending payment blocks another charge, not browsing other news.
+ $('asset').disabled=!!key||!config;
+ $('importance').disabled=!!key||!config||!$('asset').value;
  $('confirm').disabled=!!key;$('cancel').disabled=!!key;$('resume').disabled=!!key;
  document.querySelectorAll('[data-symbol]').forEach(n=>n.disabled=!!key||!!pending||!config);
  $('pending').hidden=!pending;refresh();
@@ -111,7 +112,7 @@ async function resume(checkStatus=false){
  setBusy('creating');
  // Render the purchased result after settlement has been confirmed, with a visible status update.
  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
- report=data;reportAccess=current.signature;renderReport();pending=null;localStorage.removeItem(PENDING_KEY);$('pending').hidden=true;
+ report=data;reportAccess=current.signature;renderNews();renderReport();pending=null;localStorage.removeItem(PENDING_KEY);$('pending').hidden=true;
  $('report').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
 }
 function importanceBadge(a){
@@ -236,7 +237,7 @@ function alertSymbol(){return $('alert-scope').value==='ALL'?'ALL':$('asset').va
 function assetText(key){const symbol=alertSymbol();return t(key).replaceAll('{symbol}',symbol==='ALL'?t('historyAllAssets'):symbol).replaceAll('{minutes}',String(config?.alert_interval_minutes||30));}
 function renderNews(){
  const selected=!!$('asset').value;
- $('importance-picker').hidden=!selected;$('buy').hidden=!selected;$('news-status').hidden=!selected;$('latest').hidden=!selected;
+ $('buy').hidden=!selected;$('news-status').hidden=!selected;$('latest').hidden=!selected&&!report;
  $('empty').hidden=selected||!!report;
  const message={loading:'checkingNews',available:'newsAvailable',empty:$('importance').value==='all'?'noTodayNews':'noTodayFiltered',error:newsError||'newsNetworkError'}[newsState];
  $('news-status-text').textContent=message?t(message):'';
@@ -295,7 +296,12 @@ async function selectAsset(symbol,updateHistory=true){
   const {data}=await request('/api/v1/news/'+encodeURIComponent(symbol)+importanceQuery());
   if(sequence!==newsSequence)return;
   if(data.symbol!==symbol||(data.importance||'all')!==importance||!Array.isArray(data.articles)||!['available','no_today_news'].includes(data.status))throw failure('newsNetworkError');
-  newsData=data;newsState=data.has_today_news===true?'available':'empty';
+  const available=data.status==='available'&&data.has_today_news===true;
+  const empty=data.status==='no_today_news'&&data.has_today_news===false;
+  // Missing or inconsistent fields are a failed query, never "no news".
+  if(!available&&!empty)throw failure('newsNetworkError');
+  if(data.day_utc&&data.day_utc!==new Date().toISOString().slice(0,10))throw failure('newsNetworkError');
+  newsData=data;newsState=available?'available':'empty';
  }catch(e){if(sequence!==newsSequence)return;newsState='error';newsError=e.uiKey==='sourcesError'?'sourcesError':'newsNetworkError';}
  if(sequence===newsSequence)setBusy(busyState);
 }
@@ -325,9 +331,9 @@ refresh();
   if(c.api_url!==API||atomicPrice(c.price_usdc)!==c.price_atomic||c.network_caip!==MAINNET||c.asset_id!=='31566704'||c.pay_to!==PAY_TO)throw failure('configError');
   config=c;
   a.assets.forEach(a=>{for(const id of ['asset','history-asset']){const o=node('option',a.symbol+' · '+a.name);o.value=a.symbol;$(id).append(o);}});
-  const pendingUrl=pending?new URL(pending.url):null;
-  if(pendingUrl){validatePending(pending);$('importance').value=pendingUrl.searchParams.get('importance')||'all';}
-  const initial=pendingUrl?.pathname.split('/').pop()||urlParams.get('asset');
-  selectAsset(a.assets.some(a=>a.symbol===initial)?initial:'');getWallet().catch(()=>{});setBusy();
+  // Always start with an explicit choice, including email links and reloads.
+  // Pending recovery uses its own signed URL independently of these filters.
+  $('importance').value='all';
+  selectAsset('');getWallet().catch(()=>{});setBusy();
  }catch(e){error(e.uiKey||'configError');$('availability').textContent=t('unavailable');}
 })();
