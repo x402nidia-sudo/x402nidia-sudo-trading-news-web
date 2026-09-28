@@ -18,13 +18,24 @@ header{height:auto;min-height:88px;padding-top:18px;padding-bottom:18px}.primary
 
 .history-filters{display:flex;flex-wrap:wrap;gap:16px;margin:22px 0 12px}.history-filters label{flex:1;min-width:220px;max-width:360px;font-size:13px;letter-spacing:0}.history-filters select{width:100%;min-width:0}.history-coin{display:inline-block;font-size:11px;font-weight:700;color:#175aa2;background:#e6effb;border-radius:5px;padding:3px 7px;margin:0 10px 8px 0}@media(max-width:600px){.history-filters{gap:12px}.history-filters label{flex-basis:100%;min-width:0;max-width:none}}
 
-/* Two compact selectors share one row; the purchase action stays below. */
-#choose-asset{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 12px;width:100%;max-width:620px;align-items:end}
+/* Asset, importance and purchase share one compact row. */
+#choose-asset{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:14px 12px;width:100%;max-width:780px;align-items:end}
 #choose-asset .coin-picker,#choose-asset .importance-picker{display:grid;gap:8px;min-width:0}
 #choose-asset label{display:block;margin:0;font-size:13px;line-height:1.5}
 #choose-asset select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px;min-height:44px;padding:9px 28px 9px 12px;font-size:14px;text-overflow:ellipsis}
-#choose-asset #buy{grid-column:1/-1;justify-self:start;width:auto;min-height:44px}
-@media(max-width:480px){#choose-asset{gap:12px 8px}#choose-asset label{font-size:12px}#choose-asset .step-badge{width:18px;height:18px;font-size:11px;margin-right:5px}#choose-asset select{font-size:13px;padding-left:8px;padding-right:20px}#choose-asset #buy{width:100%}}
+#choose-asset #buy{grid-column:3;justify-self:stretch;width:auto;min-height:44px;height:44px;padding:9px 14px;white-space:nowrap;font-size:13px}
+@media(max-width:480px){#choose-asset{gap:12px 8px}#choose-asset label{font-size:12px}#choose-asset .step-badge{width:18px;height:18px;font-size:11px;margin-right:5px}#choose-asset select{font-size:13px;padding-left:8px;padding-right:20px}#choose-asset{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(100px,1fr)}#choose-asset #buy{width:100%;padding:6px;font-size:12px;white-space:normal;display:flex;align-items:center;justify-content:center}#choose-asset #buy .step-badge{flex-shrink:0}#choose-asset select,#choose-asset #buy{height:52px}}
 #news-status-text.news-available{color:#b42318;font-weight:700;animation:news-pulse 2s ease-in-out infinite}
 @keyframes news-pulse{0%,100%{opacity:1}50%{opacity:.65}}
 @media(prefers-reduced-motion:reduce){#news-status-text.news-available{animation:none}}
+
+#payment-status{grid-column:1/-1;margin:0;color:#175aa2;font-size:13px;line-height:1.5}
+#history-heading{font-size:clamp(22px,2.4vw,29px);font-weight:800;letter-spacing:.02em;line-height:1.25;margin:0 0 8px;color:var(--ink)}
+#latest-title{font-size:18px;font-weight:600;margin:0;color:var(--muted)}
+#alert-form{max-width:none;margin-top:16px;padding-top:16px}
+.subscription-row{display:grid;grid-template-columns:auto minmax(120px,1fr) minmax(170px,1.2fr) minmax(170px,1.2fr) auto;align-items:center;gap:12px}
+.subscribe-title{font-size:15px;white-space:nowrap;color:var(--ink)}
+#alert-scope,#alert-importance,#alert-email,#alert-submit{box-sizing:border-box;min-width:0;width:100%;height:44px;min-height:44px;margin:0;font-size:14px}
+#alert-scope,#alert-importance{padding:8px 28px 8px 12px;text-overflow:ellipsis}
+#alert-submit{white-space:nowrap;padding:8px 18px}
+@media(max-width:900px){.subscription-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:8px}.subscribe-title{display:none}#alert-scope,#alert-importance,#alert-email,#alert-submit{font-size:12px}#alert-email{padding:8px}#alert-submit{padding:8px 10px}#alert-scope,#alert-importance{padding-left:6px;padding-right:18px}}
