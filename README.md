@@ -2,7 +2,7 @@
 
 A multilingual website for buying asset news reports with Algorand USDC through x402.
 
-Users connect a Pera wallet, select one of 49 assets and purchase a report containing ranked news, source links, publication dates and selection explanations. The 5.1 update displays a prominent BUY / SELL / HOLD assessment of the complete report.
+Users connect a Pera wallet, select one of 49 assets and purchase a report containing ranked news, source links, publication dates and selection explanations. Version 5.2 displays a report ordered entirely by explainable rules, without OpenAI or a new BUY / SELL / HOLD recommendation.
 
 - Backend repository: https://github.com/x402nidia-sudo/X402-Trading-news
 - API base URL: https://x402-trading-news.onrender.com
@@ -10,9 +10,9 @@ Users connect a Pera wallet, select one of 49 assets and purchase a report conta
 
 ## Version requirement
 
-Use the latest `index.html`, `app.js` and `style.css`, together with backend version **5.1**. These are the three files changed by the latest frontend update. Keep the existing `wallet.js` and `THIRD_PARTY_LICENSES.txt`.
+Extract `web_sin_openai.zip` at the root of `x402nidia-sudo/x402nidia-sudo-trading-news-web`, replacing `index.html`, `app.js` and `README.md`. Use backend version **5.2**. Keep the existing `style.css`, `wallet.js` and `THIRD_PARTY_LICENSES.txt`.
 
-The earlier frontend package fixes its displayed price in code and does not show the whole-report signal or the red payment-network notice. Updating the README alone does not add these features.
+The update retains the configurable price, blue design, wallet connection, circular progress indicator and red Algorand payment notice. Updating the README alone does not change application behavior.
 
 ## Features
 
@@ -22,12 +22,12 @@ The earlier frontend package fixes its displayed price in code and does not show
 - A price obtained from the backend's `PRICE_USDC` setting; default: **0.199 USDC** per report.
 - Confirmation of the recipient, report price and customer network fee before wallet signing.
 - A circular progress indicator with translated payment and report-creation states.
-- BUY / SELL / HOLD at the beginning of the purchased report, with the aggregate rationale in the selected language.
-- Ranked stories, dates, links to original sources, per-article evidence and JSON report download.
+- A rule-based report heading, with the highest-priority story first and the selection explanation in the selected language.
+- Ranked stories, dates, source links, the five priority components and JSON report download.
 - Recovery of an interrupted purchase using the original signed request.
 - An **API for agents** button opening the existing backend documentation.
 
-News headlines and excerpts retain their source language. The assessment covers all headlines and excerpts included in the report; full articles, price charts and portfolios are not analyzed.
+News headlines and excerpts retain their source language. Priority scores combine relevance (35), recency (25), predefined source priority (15), event (15) and coverage (10). They are not expected returns or trading signals. A recovered historical purchase still displays its originally stored assessment, if present, without making an OpenAI request.
 
 ## Files
 
@@ -77,12 +77,12 @@ The frontend also validates Algorand Mainnet, USDC asset `31566704`, the backend
 
 Keep the existing backend URL when updating its Render runtime/source. That preserves both this connection and the registered `/api/v1/market-signal/{symbol}` resource URLs.
 
-All provider keys, `OPENAI_API_KEY`, `OPENAI_MODEL`, `AI_RERANK` and `PRICE_USDC` belong in the **backend's** Render Environment settings. The browser reads only public configuration. A plain static deployment does not automatically substitute Render environment variables into `app.js`.
+Provider keys and `PRICE_USDC` belong in the **backend's** Render Environment settings. Remove the obsolete `OPENAI_API_KEY`, `OPENAI_MODEL`, `AI_RERANK` and `AI_DAILY_LIMIT` variables; version 5.2 ignores them. The browser reads only public configuration. A plain static deployment does not automatically substitute Render environment variables into `app.js`.
 
 ## Purchase flow
 
 1. Connect a supported Algorand wallet through Pera and choose an asset.
-2. Click **Buy report**. The backend checks that today's report and its assessment can be produced before requesting a signature.
+2. Click **Buy report**. The backend checks that today's relevant news can be retrieved and ranked before requesting a signature.
 3. Review the USDC amount, recipient and network fee.
 4. Approve the exact transaction in the wallet.
 5. The website sends the signed x402 payload to the selected asset's existing paid API route.
@@ -114,14 +114,13 @@ Open http://127.0.0.1:8080 in your browser. This frontend still calls the produc
 
 | Symptom | Check |
 |---|---|
-| Service configuration could not be verified | Deploy backend 5.1 and frontend 5.1 together; confirm API URL, Mainnet asset, recipient and public price configuration. |
+| Service configuration could not be verified | Deploy backend 5.2 and the matching frontend together; confirm API URL, Mainnet asset, recipient and public price configuration. |
 | Browser requests fail | Ensure the actual frontend origin is in backend `WEB_ORIGINS`, then redeploy the backend. |
 | No relevant news or sources unavailable | Configure at least one news provider and inspect its availability/quota on the backend. |
-| Complete report assessment unavailable | Check backend `AI_RERANK=true`, `OPENAI_API_KEY`, `OPENAI_MODEL` and AI quota. No new payment is settled for that failure. |
 | Wallet does not complete the request | Check the wallet connection, Algorand USDC balance, USDC opt-in and any displayed network fee. |
 | Price changed in Render | Reload the website to fetch the updated configuration before preparing a new payment. |
 | A purchase is pending | Recover the same report; do not authorize a replacement payment merely because the first response was interrupted. |
 
-The interface and transaction validation were checked using mocked API/wallet responses. Live wallet behavior, visual layout and real settlement must still be verified after deployment.
+All 15 JavaScript/UI/wallet checks passed using mocked API/wallet responses. No real payment was made. Live wallet behavior, visual layout and real settlement must still be verified after deployment.
 
 Render references: [Static Sites](https://render.com/docs/static-sites), [Git provider connection](https://render.com/docs/git-provider).
