@@ -1,126 +1,141 @@
 # Trading News — Web
 
-A multilingual website for buying asset news reports with Algorand USDC through x402.
+A multilingual website for purchasing explainable crypto news reports with USDC on Algorand through x402.
 
-Users connect a Pera wallet, select one of 49 assets and purchase a report containing ranked news, source links, publication dates and selection explanations. Version 5.2 displays a report ordered entirely by explainable rules, without OpenAI or a new BUY / SELL / HOLD recommendation.
+Choose a coin and an importance level, check whether relevant news is available today, and buy the matching report. Each story provides context, dates, sources, extracted key points and an indicative BUY / SELL / HOLD interpretation based on explicit rules.
 
-- Backend repository: https://github.com/x402nidia-sudo/X402-Trading-news
-- API base URL: https://x402-trading-news.onrender.com
-- API for agents: https://x402-trading-news.onrender.com/docs
+This README describes the current website paired with backend **5.7.0**.
 
-## Version requirement
+| Resource | Link |
+|---|---|
+| Website | [trading-news-web.onrender.com](https://trading-news-web.onrender.com/) |
+| Backend repository | [X402-Trading-news](https://github.com/x402nidia-sudo/X402-Trading-news) |
+| API | [x402-trading-news.onrender.com](https://x402-trading-news.onrender.com/) |
+| API for agents | [Interactive documentation](https://x402-trading-news.onrender.com/docs) |
 
-Extract `web_sin_openai.zip` at the root of `x402nidia-sudo/x402nidia-sudo-trading-news-web`, replacing `index.html`, `app.js` and `README.md`. Use backend version **5.2**. Keep the existing `style.css`, `wallet.js` and `THIRD_PARTY_LICENSES.txt`.
+## User experience
 
-The update retains the configurable price, blue design, wallet connection, circular progress indicator and red Algorand payment notice. Updating the README alone does not change application behavior.
+The website keeps its blue design and offers English by default, with Spanish, French and German in a flag dropdown. News headlines and excerpts remain in their original language; changing the interface language does not translate publisher content.
 
-## Features
+The purchase flow has four numbered steps:
 
-- English by default, with Spanish, French and German language selectors.
-- Blue interface, responsive layout and a Connect wallet button with disconnect support.
-- A red notice below Connect wallet explaining that payment requires USDC on Algorand.
-- A price obtained from the backend's `PRICE_USDC` setting; default: **0.199 USDC** per report.
-- Confirmation of the recipient, report price and customer network fee before wallet signing.
-- A circular progress indicator with translated payment and report-creation states.
-- A rule-based report heading, with the highest-priority story first and the selection explanation in the selected language.
-- Ranked stories, dates, source links, the five priority components and JSON report download.
-- Recovery of an interrupted purchase using the original signed request.
-- An **API for agents** button opening the existing backend documentation.
+1. **Connect wallet.** The current integration uses Pera Wallet on Algorand Mainnet. Ledger-backed accounts can be used through Pera. Connecting is separate from authorizing a payment.
+2. **Select your coin.** The selector starts empty and offers 49 assets, including Bitcoin, Ethereum and Algorand.
+3. **Select importance.** Choose all levels, red, orange or yellow. A selected color matches that exact category.
+4. **Buy report.** The configured price is **0.2 USDC**. The button becomes available after the service confirms matching news and the payment state allows a purchase.
 
-News headlines and excerpts retain their source language. Priority scores combine relevance (35), recency (25), predefined source priority (15), event (15) and coverage (10). They are not expected returns or trading signals. A recovered historical purchase still displays its originally stored assessment, if present, without making an OpenAI request.
+Steps 2, 3 and 4 share a compact row. Selecting a coin or changing importance automatically checks availability. Available news is highlighted in red. Empty results and failed queries have distinct messages; today's headlines are not disclosed by the free check.
 
-## Files
+Before signing, the checkout shows the report price, recipient and customer network fee. The wallet needs USDC on **Algorand**, with USDC opted in and sufficient available balance. USDC on another chain cannot be used directly. Cross-chain conversion is not implemented.
+
+The full 0.2 USDC report price goes to the configured recipient. This implementation does not split out a 0.001 USDC competition fee. Algorand network fees are separate; they are sponsored when supported by the facilitator's advertised configuration, otherwise displayed before signing.
+
+The present wallet integration uses the first account returned by Pera. It does not yet offer a separate account picker or a multi-wallet provider selector. Click the connected address to access **Disconnect**.
+
+## Reports and news cards
+
+After successful settlement, a circular progress state leads to the purchased report and payment receipt. The report includes the highest-ranked matching story, other stories ordered by relevance, score explanations, publication dates and provider status. It can be downloaded as JSON without another purchase.
+
+Story importance is shown with **red, orange and yellow icons**. Opening a story displays a generated HTML card containing the coin, publication date and time, importance, indicative signal, extracted key points and the reason for its classification. The original publisher link appears inside that card.
+
+The backend ranks news using asset relevance, recency, predefined source priority, event importance and coverage across domains. It makes no OpenAI requests. BUY / SELL / HOLD describes the rule-based interpretation of each headline and available excerpt; it is not a return forecast or a personalized investment recommendation.
+
+**Current limitation:** new reports do not contain a combined whole-report BUY / SELL / HOLD assessment. Their report-level `assessment` is null; signals are calculated per story. The website can still display an assessment present in a previously stored purchase.
+
+## Previous relevant news
+
+The **PREVIOUS RELEVANT NEWS** section shows previously collected stories from the last seven days, excluding today according to UTC.
+
+- Its coin filter initially follows the coin selected in step 2, and also supports **All coins**.
+- Its importance filter is independent of the purchase filter.
+- Rows show importance and the per-story signal, with access to the generated news card.
+- All coins searches the collected archive; it does not guarantee complete coverage of every asset.
+
+Today's news remains behind the paid report. Historical signals describe the original publication, not current market conditions.
+
+## Email subscriptions
+
+The compact **Subscribe** row includes coin scope, importance, email and the subscription button. Select a coin first, then subscribe to that coin or all coins. The alert importance filter is independent of the purchase and archive filters.
+
+The user must confirm the subscription by email. The backend then checks subscribed assets approximately every **30 minutes**, subject to provider availability and quotas. Preference changes require a new confirmation.
+
+Notifications contain coin names, importance icons and a link back to the website to buy the report. They reveal no news headlines, summaries or publisher links. Subscribing does not buy a report or initiate a wallet transaction. Each notification includes an unsubscribe link.
+
+The backend runs the scheduled task and stores subscriptions in SQLite on its persistent disk. The frontend has no email database or SMTP credentials. See the backend README for configuration and coverage limits.
+
+## Essential files
 
 | File | Purpose |
 |---|---|
-| `index.html` | Page structure |
-| `style.css` | Blue theme, layout and payment/report states |
-| `app.js` | Translations, backend requests, checkout and report display |
-| `wallet.js` | Prebuilt wallet integration and payment validation |
+| `index.html` | Page structure and controls |
+| `style.css` | Blue design and responsive layout |
+| `app.js` | Translations, filters, API requests, checkout and report rendering |
+| `wallet.js` | Prebuilt Pera integration and transaction validation |
 | `THIRD_PARTY_LICENSES.txt` | Notices for bundled dependencies |
 
-These files are served directly. This repository does not need an npm install or a JavaScript compilation step for deployment.
+Keep all five files at the repository root. `README.md` documents the project. Deployment needs no npm install, package manifest or JavaScript build: `wallet.js` is already bundled.
 
-## Deploy on Render
+## Render Static Site
 
-Create a **Static Site** for this repository. The existing `x402-trading-news` Web Service remains the Python API; do not repoint it to the frontend repository.
+Connect this repository to a **Static Site**, separate from the existing Python backend Web Service.
 
-1. In the Render Dashboard, select **New → Static Site**.
-2. Connect `x402nidia-sudo/x402nidia-sudo-trading-news-web`.
-3. Use the following settings:
-
-| Render field | Value |
+| Setting | Value |
 |---|---|
 | Repository | `https://github.com/x402nidia-sudo/x402nidia-sudo-trading-news-web` |
 | Branch | `main` |
-| Root Directory | Leave empty |
+| Root Directory | Empty |
 | Build Command | `true` |
 | Publish Directory | `.` |
 
-`true` is a successful no-op command because the deployable files already exist at the repository root. No Start Command is needed for a Static Site.
+`true` is a successful no-op command because the files are ready to serve. A Static Site does not need a Start Command or persistent disk.
 
-4. Create the site and copy its actual HTTPS URL from Render.
-5. In the **backend** service, set `WEB_ORIGINS` to that exact origin, without a trailing slash or path, and redeploy the backend.
-6. Open the website and confirm that the asset list and configured price load. Purchases require a correctly configured, deployed backend with payments enabled.
-
-Static sites can use Render's free hosting, subject to its usage limits. The backend's persistent-storage and provider requirements are separate.
-
-## Backend connection
-
-The production API URL is configured in `app.js`:
+The production API address in `app.js` is:
 
 ```js
 const API = 'https://x402-trading-news.onrender.com';
 ```
 
-The frontend also validates Algorand Mainnet, USDC asset `31566704`, the backend's advertised atomic price and the pinned receiving address before signing. The unsigned quote must agree with the configuration shown to the customer.
+Set these variables on the **backend**, not the Static Site:
 
-Keep the existing backend URL when updating its Render runtime/source. That preserves both this connection and the registered `/api/v1/market-signal/{symbol}` resource URLs.
+| Variable | Value |
+|---|---|
+| `WEB_ORIGINS` | `https://trading-news-web.onrender.com` |
+| `WEB_BASE_URL` | `https://trading-news-web.onrender.com` |
+| `PRICE_USDC` | `0.2` |
+| `ALERT_INTERVAL_HOURS` | `0.5` |
 
-Provider keys and `PRICE_USDC` belong in the **backend's** Render Environment settings. Remove the obsolete `OPENAI_API_KEY`, `OPENAI_MODEL`, `AI_RERANK` and `AI_DAILY_LIMIT` variables; version 5.2 ignores them. The browser reads only public configuration. A plain static deployment does not automatically substitute Render environment variables into `app.js`.
+News provider keys and Gmail app credentials also belong exclusively in the backend. This plain static website does not automatically substitute Render environment variables into JavaScript.
 
-## Purchase flow
+The browser validates the API configuration and unsigned payment, including Algorand Mainnet, USDC asset `31566704`, the advertised amount and the pinned recipient. A recipient change requires coordinating both repositories and rebuilding wallet validation.
 
-1. Connect a supported Algorand wallet through Pera and choose an asset.
-2. Click **Buy report**. The backend checks that today's relevant news can be retrieved and ranked before requesting a signature.
-3. Review the USDC amount, recipient and network fee.
-4. Approve the exact transaction in the wallet.
-5. The website sends the signed x402 payload to the selected asset's existing paid API route.
-6. After a confirmed settlement response, the website displays the report and its receipt.
+## Interrupted payments
 
-The backend prepares and validates content before settlement to avoid charging for an unavailable report. The waiting messages do not mean that an empty report has already been paid for.
+The current UI has no **Recover report** or recovery-file download button. It retains the original signed payment request in browser storage and automatically checks its status when the page opens or becomes visible, and while a payment remains unresolved.
 
-The wallet needs **USDC on Algorand**, with the USDC asset opted in. USDC on another network cannot be used directly by this checkout. Automatic swaps, cross-network transfers and card payments are not implemented.
-
-Network fees are shown separately. Fee sponsorship depends on what the facilitator advertises; the website does not promise that every payment is sponsored.
-
-## Recover an interrupted purchase
-
-Use **Recover report** to resend the original signed purchase request. The backend stores the report and receipt and prevents a second settlement of that same purchase.
-
-Keep browser storage available until the result is known. The recovery JSON file contains the signed request needed to retrieve the purchased report; keep it private. Avoid making a new purchase to resolve an uncertain payment.
+These status checks do not sign or settle a new payment. A confirmed stored purchase can be reopened; an expired transaction confirmed unpaid releases the purchase button. An unknown result remains pending to avoid a replacement charge. Preserve browser storage until the outcome is known, and keep signed payment proofs private.
 
 ## Local preview
-
-Run this command in the repository root:
 
 ```bash
 python -m http.server 8080
 ```
 
-Open http://127.0.0.1:8080 in your browser. This frontend still calls the production API. For browser requests to work, the backend's `WEB_ORIGINS` must temporarily include `http://127.0.0.1:8080` or `http://localhost:8080`, matching the address you actually use. Wallet connection and purchases require compatible wallet support and the real backend configuration; a local preview is not a payment sandbox.
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080/). The frontend still calls the production API; allow that exact origin in the backend's `WEB_ORIGINS` for local browser requests. Local hosting does not turn real payments into test payments.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
-| Service configuration could not be verified | Deploy backend 5.2 and the matching frontend together; confirm API URL, Mainnet asset, recipient and public price configuration. |
-| Browser requests fail | Ensure the actual frontend origin is in backend `WEB_ORIGINS`, then redeploy the backend. |
-| No relevant news or sources unavailable | Configure at least one news provider and inspect its availability/quota on the backend. |
-| Wallet does not complete the request | Check the wallet connection, Algorand USDC balance, USDC opt-in and any displayed network fee. |
-| Price changed in Render | Reload the website to fetch the updated configuration before preparing a new payment. |
-| A purchase is pending | Recover the same report; do not authorize a replacement payment merely because the first response was interrupted. |
+| Cannot connect to the service | Backend availability, API URL and exact `WEB_ORIGINS` setting |
+| Buy button unavailable | Selected coin and importance, availability response, payment configuration and unresolved previous payment |
+| No relevant news | No matching story for today's UTC date and chosen category; try another importance level |
+| Source query fails | Backend provider credentials, quota and availability |
+| Pera opens directly | Pera is the currently integrated wallet provider |
+| Wallet payment fails | Algorand USDC balance, opt-in, account restrictions and the displayed error |
+| Subscription controls unavailable | Backend 5.7, `email_alerts_enabled: true` and `alert_importance_enabled: true` |
+| No alert email | Email confirmation, matching new stories, importance filter, spam folder and backend provider/SMTP status |
+| Old layout or price | Confirm both deployments are current and reload the page to refresh assets and configuration |
 
-All 15 JavaScript/UI/wallet checks passed using mocked API/wallet responses. No real payment was made. Live wallet behavior, visual layout and real settlement must still be verified after deployment.
+Live payment success depends on the wallet, backend and facilitator. API documentation or a healthy deployment alone does not establish successful settlement.
 
-Render references: [Static Sites](https://render.com/docs/static-sites), [Git provider connection](https://render.com/docs/git-provider).
+References: [Render Static Sites](https://render.com/docs/static-sites), [Pera Connect](https://docs.perawallet.app/references/pera-connect/).
