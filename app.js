@@ -77,7 +77,7 @@ async function request(path,options={}){
  }catch(e){if(e.uiKey)throw e;throw failure(pending?'paymentError':'networkError');}
  finally{clearTimeout(timeout);}
 }
-async function getWallet(){if(!walletModule)walletModule=await import('./wallet.js');return walletModule;}
+async function getWallet(){if(!walletModule)walletModule=await import('./wallet.js?v=news-sources-580');return walletModule;}
 async function connect(){walletAddress=await (await getWallet()).connect(config);refresh();return walletAddress;}
 function renderQuote(){
  $('checkout-price').textContent=price(quote.price_usdc)+' USDC';
@@ -87,7 +87,7 @@ function renderQuote(){
 }
 function validatePending(p){
  const u=new URL(p.url);
- if(u.origin!==API||!/^\/api\/v1\/market-signal\/[A-Z0-9]+$/.test(u.pathname)||(u.search&&!/^\?importance=(high|medium|low)$/.test(u.search))||u.hash||typeof p.signature!=='string'||p.signature.length>32768)throw failure('paymentError');
+ if(u.origin!==API||!/^\/api\/(?:web\/)?v1\/market-signal\/[A-Z0-9]+$/.test(u.pathname)||(u.search&&!/^\?importance=(high|medium|low)$/.test(u.search))||u.hash||typeof p.signature!=='string'||p.signature.length>32768)throw failure('paymentError');
  return u.pathname+u.search;
 }
 function importanceQuery(){const value=$('importance').value;return value==='all'?'':'?importance='+value;}
@@ -236,8 +236,8 @@ $('buy').addEventListener('click',async()=>{
   try{localStorage.setItem('tradingnews.storagecheck','1');localStorage.removeItem('tradingnews.storagecheck');}catch{throw failure('storageError');}
   if(!walletAddress)await connect();
   const symbol=$('asset').value;
-  const {data}=await request('/api/v1/checkout/'+encodeURIComponent(symbol)+importanceQuery(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:walletAddress})});
-  if(atomicPrice(data.price_usdc)!==config.price_atomic||data.challenge?.resource?.url!==API+'/api/v1/market-signal/'+encodeURIComponent(symbol)+importanceQuery())throw failure('configError');
+  const {data}=await request('/api/web/v1/checkout/'+encodeURIComponent(symbol)+importanceQuery(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:walletAddress})});
+  if(atomicPrice(data.price_usdc)!==config.price_atomic||data.challenge?.resource?.url!==API+'/api/web/v1/market-signal/'+encodeURIComponent(symbol)+importanceQuery())throw failure('configError');
   quote={...data,symbol};renderQuote();$('checkout').showModal();
  }catch(e){if(['noTodayNews','noTodayFiltered'].includes(e.uiKey)){newsState='empty';newsData=null;}else if(e.uiKey==='sourcesError'){newsState='error';newsError='sourcesError';newsData=null;}error(e.uiKey||'walletError');}finally{setBusy();}
 });
@@ -317,7 +317,7 @@ async function loadHistory(symbol){
  $('history-asset').value=symbol||'ALL';renderHistory();
  if(!symbol)return;
  try{
-  const {data}=await request('/api/v1/history?'+new URLSearchParams({symbol,importance}));
+  const {data}=await request('/api/web/v1/history?'+new URLSearchParams({symbol,importance}));
   if(sequence!==historySequence)return;
   if(data.symbol!==symbol||data.importance!==importance||!Array.isArray(data.articles))throw failure('newsNetworkError');
   historyData=data;historyState='ready';
@@ -331,7 +331,7 @@ async function selectAsset(symbol,updateHistory=true){
  if(updateHistory)loadHistory(symbol);
  if(!symbol)return;
  try{
-  const {data}=await request('/api/v1/news/'+encodeURIComponent(symbol)+importanceQuery());
+  const {data}=await request('/api/web/v1/news/'+encodeURIComponent(symbol)+importanceQuery());
   if(sequence!==newsSequence)return;
   if(data.symbol!==symbol||(data.importance||'all')!==importance||!Array.isArray(data.articles)||!['available','no_today_news'].includes(data.status))throw failure('newsNetworkError');
   const available=data.status==='available'&&data.has_today_news===true;
