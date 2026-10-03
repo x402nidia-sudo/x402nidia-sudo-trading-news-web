@@ -1,5 +1,8 @@
 # Trading News — Web
 
+- Website: https://www.breaking-trading-new.es/
+- API (x402 endpoints): https://x402-trading-news.onrender.com
+
 A multilingual website for purchasing explainable crypto news reports with USDC on Algorand through x402.
 
 Choose a coin and an importance level, check whether relevant news is available today, and buy the matching report. Each story provides context, dates, sources, extracted key points and an indicative BUY / SELL / HOLD interpretation based on explicit rules.
