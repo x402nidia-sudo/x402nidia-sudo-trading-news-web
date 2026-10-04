@@ -287,7 +287,7 @@ async function loadToday(){
   const {data}=await request('/api/web/v1/news-today');
   // Missing or inconsistent fields are a failed query, never "no news".
   if(!Array.isArray(data.symbols)||data.day_utc!==new Date().toISOString().slice(0,10))throw failure('newsNetworkError');
-  todayNews={symbols:data.symbols};
+  todayNews={symbols:[...data.symbols].sort()};
  }catch(e){todayNews={error:e.uiKey==='sourcesError'?'sourcesError':'newsNetworkError'};}
  renderToday();
 }
@@ -394,7 +394,7 @@ refresh();
   const [{data:c},{data:a}]=await Promise.all([request('/api/v1/config'),request('/api/v1/assets')]);
   if(c.api_url!==API||atomicPrice(c.price_usdc)!==c.price_atomic||c.network_caip!==MAINNET||c.asset_id!=='31566704'||c.pay_to!==PAY_TO)throw failure('configError');
   config=c;
-  a.assets.forEach(a=>{for(const id of ['asset','history-asset']){const o=node('option',a.symbol+' · '+a.name);o.value=a.symbol;$(id).append(o);}});
+  a.assets.sort((x,y)=>x.symbol.localeCompare(y.symbol)).forEach(a=>{for(const id of ['asset','history-asset']){const o=node('option',a.symbol+' · '+a.name);o.value=a.symbol;$(id).append(o);}});
   // Always start with an explicit choice, including email links and reloads.
   // Pending recovery uses its own signed URL independently of these filters.
   $('importance').value='all';
